@@ -212,17 +212,16 @@ void ejemplo_5() {
 
 template <typename Iterator, typename T = typename Iterator::value_type>
 auto accumulate_par_async(Iterator start, Iterator stop, T initial) {
+
     // Calcula hilos y rango
     int sz = distance(start, stop);
     int n_hilos = get_number_of_threads(sz, expected_range);
     size_t range =  ceil((sz * 1.0)/ n_hilos);
 
-    // Genera los contenedores de hilos y de subtotales
+    // Genera los contenedores de futuros
     vector<future<T>> v_futures(n_hilos);
 
-    // Generar 2 iteradores
     auto iter = start;             // Iterador de los datos
-
     for_each(begin(v_futures), prev(end(v_futures)), [&, range](auto& fut) {
         fut = async(std::accumulate<Iterator, T>, iter, next(iter, range), initial);
         advance(iter, range);
@@ -233,7 +232,7 @@ auto accumulate_par_async(Iterator start, Iterator stop, T initial) {
     *it_future = async(accumulate<Iterator, T>, iter, next(iter, range), initial);
 
     return accumulate(begin(v_futures), end(v_futures), initial,
-    [](auto subtotal, auto& fut) { return subtotal + fut.get(); });
+                [](auto subtotal, auto& fut) { return subtotal + fut.get(); });
 }
 
 void ejemplo_6() {
